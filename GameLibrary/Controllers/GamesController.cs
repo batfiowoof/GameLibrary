@@ -1,14 +1,18 @@
 ﻿using GameLibrary.Data;
 using GameLibrary.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameLibrary.Controllers
 {
     public class GamesController : Controller
     {
+        // Контекст на базата данни
         private readonly GameLibraryContext _context;
+        // Observer pattern
         private readonly GameSubject _gameSubject;
+        // Сортиране на игрите
         private readonly GameSorter _gameSorter;
 
         public GamesController(GameLibraryContext context, GameSubject gameSubject)
@@ -23,15 +27,15 @@ namespace GameLibrary.Controllers
         //GET /Game/
         public async Task<IActionResult> Index(string sortOrder)
         {
-            // Set up sorting options
+            // Задаваме параметрите за сортиране
             ViewData["TitleSortParm"] = sortOrder == "title" ? "title_desc" : "title";
             ViewData["ReleaseDateSortParm"] = sortOrder == "releaseDate" ? "releaseDate_desc" : "releaseDate";
             ViewData["GenreSortParm"] = sortOrder == "genre" ? "genre_desc" : "genre";
 
-            // Retrieve all games from the database
+            // Взимаме игрите от базата данни
             var games = from g in _context.Game select g;
 
-            // Apply sorting based on sortOrder parameter
+            // Сортиране на игрите
             switch (sortOrder)
             {
                 case "title":
@@ -53,7 +57,7 @@ namespace GameLibrary.Controllers
                     games = games.OrderByDescending(g => g.Genre);
                     break;
                 default:
-                    games = games.OrderBy(g => g.Title); // Default sort by title
+                    games = games.OrderBy(g => g.Title); // Сортиране по подразбиране
                     break;
             }
 
@@ -82,13 +86,14 @@ namespace GameLibrary.Controllers
         // POST: /Game/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        // Атрибутите [Bind] са необходими, за да избегнем атаки от типа "over-posting"
         public async Task<IActionResult> Create([Bind("ID,Title,Publisher,Developer,ReleaseDate,Genre")] Game game)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(game);
                 await _context.SaveChangesAsync();
-                _gameSubject.Notify(game); // Notify observers of the new game
+                _gameSubject.Notify(game); // Известяваме всички наблюдатели за добавянето на нова игра
                 return RedirectToAction("Index");
             }
             return View(game);
@@ -100,7 +105,8 @@ namespace GameLibrary.Controllers
             if (id == null)
                 return NotFound();
 
-            var game = await _context.Game.FindAsync(id);
+            // Use AsNoTracking to retrieve the entity without tracking it
+            var game = await _context.Game.AsNoTracking().FirstOrDefaultAsync(m => m.ID == id);
             if (game == null)
                 return NotFound();
 
@@ -119,10 +125,16 @@ namespace GameLibrary.Controllers
             {
                 try
                 {
-                    _context.Update(game);
-                    await _context.SaveChangesAsync();
+                    // Откачат се всякакви вече проследени инстанции на този обект
+                    var existingEntity = _context.Game.Local.FirstOrDefault(e => e.ID == game.ID);
+                    if (existingEntity != null)
+                    {
+                        _context.Entry(existingEntity).State = EntityState.Detached;
+                    }
 
-                    _gameSubject.Notify(game); // Notify observers of the updated game
+                    // Променяме състоянието на обекта
+                    _context.Attach(game).State = EntityState.Modified;
+                    await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -155,9 +167,13 @@ namespace GameLibrary.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var game = await _context.Game.FindAsync(id);
-            _context.Game.Remove(game);
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Index");
+            if (game != null)
+            {
+                _context.Game.Remove(game);
+                // Прилагаме промените в контекста на базата данни
+                await _context.SaveChangesAsync();
+            }
+            return RedirectToAction(nameof(Index));
         }
 
         private bool GameExists(int id)
