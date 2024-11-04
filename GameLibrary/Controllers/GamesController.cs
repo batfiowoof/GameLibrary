@@ -30,7 +30,7 @@ namespace GameLibrary.Controllers
                 case "title":
                     _gameSorter.SetSortStrategy(new SortByName());
                     break;
-                case "release_date":
+                case "releaseDate":
                     _gameSorter.SetSortStrategy(new SortByReleaseDate());
                     break;
                 default:
@@ -93,7 +93,7 @@ namespace GameLibrary.Controllers
         // POST: /Game/Edit/
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Game game)
+        public async Task<IActionResult> Edit(int id, [Bind("ID,Title,Publisher,Developer,ReleaseDate,Genre")] Game game)
         {
             if (id != game.ID)
                 return NotFound();
@@ -104,7 +104,8 @@ namespace GameLibrary.Controllers
                 {
                     _context.Update(game);
                     await _context.SaveChangesAsync();
-                    _gameSubject.Notify(game);
+
+                    _gameSubject.Notify(game); // Notify observers of the updated game
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -113,7 +114,7 @@ namespace GameLibrary.Controllers
                     else
                         throw;
                 }
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
             return View(game);
         }
