@@ -108,15 +108,6 @@ The project demonstrates the following design patterns:
 
 ---
 
-## Future Enhancements
-
-- **Search Functionality**: Implement a search bar to filter games by title, genre, or publisher.
-- **Pagination**: Add pagination to handle large lists of games more effectively.
-- **Advanced Filtering**: Allow filtering by multiple criteria (e.g., by genre and release date).
-- **User Authentication**: Restrict certain actions (like editing or deleting games) to authenticated users.
-
----
-
 ## License
 
 This project is open-source and available under the MIT License.
