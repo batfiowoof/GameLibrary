@@ -25,44 +25,40 @@ namespace GameLibrary.Controllers
         }
 
         //GET /Game/
-        public async Task<IActionResult> Index(string sortOrder)
+        public async Task<IActionResult> Index(string sortOrder, bool ascending = true)
         {
-            // Задаваме параметрите за сортиране
-            ViewData["TitleSortParm"] = sortOrder == "title" ? "title_desc" : "title";
-            ViewData["ReleaseDateSortParm"] = sortOrder == "releaseDate" ? "releaseDate_desc" : "releaseDate";
-            ViewData["GenreSortParm"] = sortOrder == "genre" ? "genre_desc" : "genre";
+            // Set up sorting options with ViewData for toggling
+            ViewData["TitleSortParam"] = sortOrder == "title" && ascending ? "title_desc" : "title";
+            ViewData["ReleaseDateSortParam"] = sortOrder == "releaseDate" && ascending ? "releaseDate_desc" : "releaseDate";
+            ViewData["GenreSortParam"] = sortOrder == "genre" && ascending ? "genre_desc" : "genre";
 
-            // Взимаме игрите от базата данни
+            // Retrieve all games from the database
             var games = from g in _context.Game select g;
 
-            // Сортиране на игрите
+            // Apply sorting based on sortOrder and ascending/descending toggle
             switch (sortOrder)
             {
                 case "title":
-                    games = games.OrderBy(g => g.Title);
-                    break;
-                case "title_desc":
-                    games = games.OrderByDescending(g => g.Title);
+                    games = ascending ? games.OrderBy(g => g.Title) : games.OrderByDescending(g => g.Title);
                     break;
                 case "releaseDate":
-                    games = games.OrderBy(g => g.ReleaseDate);
-                    break;
-                case "releaseDate_desc":
-                    games = games.OrderByDescending(g => g.ReleaseDate);
+                    games = ascending ? games.OrderBy(g => g.ReleaseDate) : games.OrderByDescending(g => g.ReleaseDate);
                     break;
                 case "genre":
-                    games = games.OrderBy(g => g.Genre);
-                    break;
-                case "genre_desc":
-                    games = games.OrderByDescending(g => g.Genre);
+                    games = ascending ? games.OrderBy(g => g.Genre) : games.OrderByDescending(g => g.Genre);
                     break;
                 default:
-                    games = games.OrderBy(g => g.Title); // Сортиране по подразбиране
+                    games = games.OrderBy(g => g.Title); // Default sort by title
                     break;
             }
 
+            // Pass the current sorting direction
+            ViewData["CurrentSortOrder"] = sortOrder;
+            ViewData["IsAscending"] = ascending;
+
             return View(await games.AsNoTracking().ToListAsync());
         }
+
 
         // GET: /Game/Details/5
         public async Task<IActionResult> Details(int? id)
