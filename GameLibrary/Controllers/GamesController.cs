@@ -23,24 +23,41 @@ namespace GameLibrary.Controllers
         //GET /Game/
         public async Task<IActionResult> Index(string sortOrder)
         {
-            var games = await _context.Game.ToListAsync();
+            // Set up sorting options
+            ViewData["TitleSortParm"] = sortOrder == "title" ? "title_desc" : "title";
+            ViewData["ReleaseDateSortParm"] = sortOrder == "releaseDate" ? "releaseDate_desc" : "releaseDate";
+            ViewData["GenreSortParm"] = sortOrder == "genre" ? "genre_desc" : "genre";
 
+            // Retrieve all games from the database
+            var games = from g in _context.Game select g;
+
+            // Apply sorting based on sortOrder parameter
             switch (sortOrder)
             {
                 case "title":
-                    _gameSorter.SetSortStrategy(new SortByName());
+                    games = games.OrderBy(g => g.Title);
+                    break;
+                case "title_desc":
+                    games = games.OrderByDescending(g => g.Title);
                     break;
                 case "releaseDate":
-                    _gameSorter.SetSortStrategy(new SortByReleaseDate());
+                    games = games.OrderBy(g => g.ReleaseDate);
+                    break;
+                case "releaseDate_desc":
+                    games = games.OrderByDescending(g => g.ReleaseDate);
+                    break;
+                case "genre":
+                    games = games.OrderBy(g => g.Genre);
+                    break;
+                case "genre_desc":
+                    games = games.OrderByDescending(g => g.Genre);
                     break;
                 default:
-                    _gameSorter.SetSortStrategy(new SortByGenre());
+                    games = games.OrderBy(g => g.Title); // Default sort by title
                     break;
             }
 
-            var sortedGames = _gameSorter.Sort(games);
-
-            return View(sortedGames);
+            return View(await games.AsNoTracking().ToListAsync());
         }
 
         // GET: /Game/Details/5
