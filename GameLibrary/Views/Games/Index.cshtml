@@ -1,0 +1,45 @@
+﻿@model IEnumerable<GameLibrary.Models.Game>
+
+@{
+    ViewData["Title"] = "Games List";
+}
+
+<h2>Games List</h2>
+
+<p>
+    <a asp-action="Create">Add New Game</a>
+</p>
+
+<!-- Sorting Options -->
+<p>
+    Sort by:
+    <a asp-action="Index" asp-route-sortOrder="name">Name</a> |
+    <a asp-action="Index" asp-route-sortOrder="releaseDate">Release Date</a> |
+    <a asp-action="Index" asp-route-sortOrder="genre">Genre</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Release Date</th>
+            <th>Genre</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var game in Model)
+        {
+            <tr>
+                <td>@game.Title</td>
+                <td>@game.ReleaseDate.ToShortDateString()</td>
+                <td>@game.Genre</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@game.ID">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@game.ID">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@game.ID">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
