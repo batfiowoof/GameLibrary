@@ -10,8 +10,13 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<GameLibraryContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Singleton);
 
-//GameSubject with singleton lifetime
-builder.Services.AddSingleton<GameSubject>();
+//GameSubject with singleton
+builder.Services.AddSingleton<GameSubject>(provider =>
+{
+    var notifier = new GameSubject();
+    notifier.Attach(new GameAddedObserver()); // Attach observer only once
+    return notifier;
+});
 
 var app = builder.Build();
 

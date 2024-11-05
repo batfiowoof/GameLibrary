@@ -10,53 +10,46 @@ namespace GameLibrary.Controllers
     {
         // Контекст на базата данни
         private readonly GameLibraryContext _context;
-        // Observer pattern
-        private readonly GameSubject _gameSubject;
         // Сортиране на игрите
         private readonly GameSorter _gameSorter;
 
-        public GamesController(GameLibraryContext context, GameSubject gameSubject)
+        private readonly GameSubject _gameSubject;
+
+        public GamesController(GameLibraryContext context,GameSubject gameSubject)
         {
             _context = context;
-            _gameSubject = gameSubject;
             _gameSorter = new GameSorter();
-
-            _gameSubject.Attach(new GameAddedObserver());
+            _gameSubject = gameSubject;
         }
 
         //GET /Game/
-        public async Task<IActionResult> Index(string sortOrder, bool ascending = true)
+        public async Task<IActionResult> Index(string sortOrder)
         {
-            // Set up sorting options with ViewData for toggling
-            ViewData["TitleSortParam"] = sortOrder == "title" && ascending ? "title_desc" : "title";
-            ViewData["ReleaseDateSortParam"] = sortOrder == "releaseDate" && ascending ? "releaseDate_desc" : "releaseDate";
-            ViewData["GenreSortParam"] = sortOrder == "genre" && ascending ? "genre_desc" : "genre";
-
             // Retrieve all games from the database
-            var games = from g in _context.Game select g;
+            var games = await _context.Game.AsNoTracking().ToListAsync();
 
-            // Apply sorting based on sortOrder and ascending/descending toggle
+            // Initialize GameSorter and choose the appropriate strategy
+            var gameSorter = new GameSorter();
             switch (sortOrder)
             {
-                case "title":
-                    games = ascending ? games.OrderBy(g => g.Title) : games.OrderByDescending(g => g.Title);
+                case "name":
+                    gameSorter.SetSortStrategy(new SortByName());
                     break;
                 case "releaseDate":
-                    games = ascending ? games.OrderBy(g => g.ReleaseDate) : games.OrderByDescending(g => g.ReleaseDate);
+                    gameSorter.SetSortStrategy(new SortByReleaseDate());
                     break;
                 case "genre":
-                    games = ascending ? games.OrderBy(g => g.Genre) : games.OrderByDescending(g => g.Genre);
+                    gameSorter.SetSortStrategy(new SortByGenre());
                     break;
                 default:
-                    games = games.OrderBy(g => g.Title); // Default sort by title
+                    gameSorter.SetSortStrategy(new SortByName()); // Default sorting by name
                     break;
             }
 
-            // Pass the current sorting direction
-            ViewData["CurrentSortOrder"] = sortOrder;
-            ViewData["IsAscending"] = ascending;
+            // Apply the selected sorting strategy
+            var sortedGames = gameSorter.Sort(games);
 
-            return View(await games.AsNoTracking().ToListAsync());
+            return View(sortedGames);
         }
 
 

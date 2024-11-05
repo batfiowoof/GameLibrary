@@ -14,13 +14,13 @@
     <thead>
         <tr>
             <th>
-                <a asp-action="Index" asp-route-sortOrder="title" asp-route-ascending="@(ViewData["CurrentSortOrder"]?.ToString() == "title" && (bool)ViewData["IsAscending"] == true ? false : true)">Title</a>
+                <a asp-action="Index" asp-route-sortOrder="name">Title</a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-sortOrder="releaseDate" asp-route-ascending="@(ViewData["CurrentSortOrder"]?.ToString() == "releaseDate" && (bool)ViewData["IsAscending"] == true ? false : true)">Release Date</a>
+                <a asp-action="Index" asp-route-sortOrder="releaseDate">Release Date</a>
             </th>
             <th>
-                <a asp-action="Index" asp-route-sortOrder="genre" asp-route-ascending="@(ViewData["CurrentSortOrder"]?.ToString() == "genre" && (bool)ViewData["IsAscending"] == true ? false : true)">Genre</a>
+                <a asp-action="Index" asp-route-sortOrder="genre">Genre</a>
             </th>
             <th></th>
         </tr>
