@@ -6,11 +6,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-//Server connection with singleton lifetime
+// Връзката със сървъра е Singleton, защото искаме да имаме само една връзка с базата данни
 builder.Services.AddDbContext<GameLibraryContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Singleton);
 
 //GameSubject with singleton
+// Singleton се използва за да се гарантира, че ще имаме само един GameSubject, който ще бъде споделян от всички клиенти
 builder.Services.AddSingleton<GameSubject>(provider =>
 {
     var notifier = new GameSubject();

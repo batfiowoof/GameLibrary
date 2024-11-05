@@ -12,9 +12,10 @@ namespace GameLibrary.Controllers
         private readonly GameLibraryContext _context;
         // Сортиране на игрите
         private readonly GameSorter _gameSorter;
-
+        // Наблюдател
         private readonly GameSubject _gameSubject;
 
+        //Dependency Injection
         public GamesController(GameLibraryContext context,GameSubject gameSubject)
         {
             _context = context;
